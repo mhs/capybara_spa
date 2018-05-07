@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    capybara_spa (0.1.0)
+    capybara_spa (0.2.0)
       capybara (~> 3.0)
 
 GEM
