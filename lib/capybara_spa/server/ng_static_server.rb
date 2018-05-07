@@ -2,6 +2,8 @@ require 'logger'
 
 module CapybaraSpa
   module Server
+    class Error < ::StandardError ; end
+
     # CapybaraSpa::Server::NgStaticServer is a class that wraps running
     # a static Angular app using angular-http-server. It can take the
     # following environment variables:
@@ -13,10 +15,10 @@ module CapybaraSpa
     #  * NG_PORT: what port to run the Angular app on. Defaults to 5001.
     #
     class NgStaticServer
-      class NgAppNotFound < ::StandardError ; end
-      class NgHttpServerNotFound < ::StandardError ; end
-      class NgHttpServerNotExecutable < ::StandardError ; end
-      class NodeModulesDirectoryNotFound < ::StandardError ; end
+      class NgAppNotFound < Error ; end
+      class NgHttpServerNotFound < Error ; end
+      class NgHttpServerNotExecutable < Error ; end
+      class NodeModulesDirectoryNotFound < Error ; end
 
       attr_accessor :build_path, :http_server_bin_path, :log_file, :pid_file, :port
       attr_accessor :pid
