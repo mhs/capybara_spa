@@ -46,7 +46,7 @@ module CapybaraSpa
         check_requirements!
 
         @pid = fork do
-          STDOUT.reopen(@log_file)
+          STDOUT.reopen(@log_file) unless @log_file == STDOUT
           run_server
         end
         File.write(pid_file, pid)
