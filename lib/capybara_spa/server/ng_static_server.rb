@@ -23,8 +23,9 @@ module CapybaraSpa
       attr_accessor :build_path, :http_server_bin_path, :log_file, :pid_file, :port
       attr_accessor :pid
 
-      def initialize(build_path:, http_server_bin_path: nil, log_file: CapybaraSpa.log_file, pid_file: nil, port: nil)
-        @build_path = build_path || ENV.fetch('NG_BUILD_PATH', nil)
+      def initialize(build_path: nil, http_server_bin_path: nil, log_file: CapybaraSpa.log_file, pid_file: nil, port: nil)
+        build_path ||= ENV.fetch('NG_BUILD_PATH', nil)
+        @build_path = File.expand_path(build_path) if build_path
         @http_server_bin_path = http_server_bin_path || ENV.fetch('NG_HTTP_SERVER_BIN') { find_http_server_bin_path }
         @log_file = log_file
         @pid_file = pid_file || ENV.fetch('NG_PID_FILE', '/tmp/angular-process.pid')
@@ -46,7 +47,7 @@ module CapybaraSpa
         check_requirements!
 
         @pid = fork do
-          STDOUT.reopen(@log_file)
+          STDOUT.reopen(@log_file) unless @log_file == STDOUT
           run_server
         end
         File.write(pid_file, pid)
@@ -58,7 +59,7 @@ module CapybaraSpa
       def stop
         if File.exist?(pid_file)
           pid = File.read(pid_file).to_i
-          puts "capybara-angular/angular-http-server:parent#at_exit sending SIGTERM to pid: #{pid}" if ENV['DEBUG']
+          puts "capybara_spa/angular-http-server:parent#at_exit sending SIGTERM to pid: #{pid}" if ENV['DEBUG']
           begin
             Process.kill 'SIGTERM', pid
             Process.wait pid
@@ -66,12 +67,12 @@ module CapybaraSpa
             # no-op, the child process does not exist
           end
 
-          puts "capybara-angular/angular-http-server removing pid_file: #{pid_file}" if ENV['DEBUG']
+          puts "capybara_spa/angular-http-server removing pid_file: #{pid_file}" if ENV['DEBUG']
           FileUtils.rm pid_file
           @started = false
           true
         else
-          puts "capybara-angular/angular-http-server did not find pid_file, no process to SIGHUP: #{pid_file}" if ENV['DEBUG']
+          puts "capybara_spa/angular-http-server did not find pid_file, no process to SIGHUP: #{pid_file}" if ENV['DEBUG']
           false
         end
       end
@@ -85,7 +86,6 @@ module CapybaraSpa
 
       def check_executable_requirements!
         executable_name = File.basename(http_server_bin_path)
-
         if File.exist?(http_server_bin_path)
           if !File.executable?(http_server_bin_path)
             raise NgHttpServerNotExecutable, 'File found, but not executable!'
@@ -125,32 +125,47 @@ module CapybaraSpa
         # if no http-server found in default PATH then try to find it in node_modules
         if http_server_bin_path.length == 0
           http_server_bin_path = File.join(node_modules_path, '.bin', 'angular-http-server')
+        else
         end
 
-        http_server_bin_path
+        File.expand_path(http_server_bin_path) if http_server_bin_path
+      end
+
+      def node_modules_path
+        cwd = ''
+        loop do
+          path = File.expand_path File.join(build_path, cwd, 'node_modules')
+          if Dir.exist?(path)
+            return path
+          elsif File.expand_path(path) == '/node_modules'
+            raise NodeModulesDirectoryNotFound, 'Cannot find "node_modules" directory. Walked all the way to the root "/"!'
+          else
+            cwd = File.join '..', cwd
+          end
+        end
       end
 
       def run_server
         build_dir = File.dirname(build_path)
         Dir.chdir(build_dir) do
           cmd = "#{http_server_bin_path} -p #{port} --path #{File.basename(build_path)}"
-          puts "capybara-angular/angular-http-server is executing command: #{cmd}" # if ENV['DEBUG']
+          puts "capybara_spa/angular-http-server is executing command: #{cmd}" if ENV['DEBUG']
           spawn_cmd(cmd)
         end
       end
 
       def spawn_cmd(cmd)
-        puts "capybara-angular/angular-http-server is executing command: #{cmd}" if ENV['DEBUG']
+        puts "capybara_spa/angular-http-server is executing command: #{cmd}" if ENV['DEBUG']
 
         # use spawn(cmd, arg1, ... ) version to avoid launching a shell that launches the
         # http-server or ng process. We want this pid to be the actual process to kill when
         # this program is done exiting.
         pid = spawn *cmd.split(/\s+/)
 
-        puts "capybara-angular/angular-http-server:forked child with pid: #{pid}" if ENV['DEBUG']
+        puts "capybara_spa/angular-http-server:forked child with pid: #{pid}" if ENV['DEBUG']
 
         at_exit do
-          puts "capybara-angular/angular-http-server:forked#at_exit is sending SIGTERM signal to pid: #{pid}" if ENV['DEBUG']
+          puts "capybara_spa/angular-http-server:forked#at_exit is sending SIGTERM signal to pid: #{pid}" if ENV['DEBUG']
           begin
             Process.kill 'TERM', pid
             Process.wait pid

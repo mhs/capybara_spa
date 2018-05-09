@@ -4,7 +4,7 @@ require 'timeout'
 describe CapybaraSpa::Server::NgStaticServer, js: true do
   let(:spec_dir) { File.join File.dirname(__FILE__), '../../' }
   let(:tmp_dir) { File.join spec_dir, '..', 'tmp' }
-  let(:angular_app_path) { File.join tmp_dir, 'angular-app' }
+  let(:angular_app_path) { File.join spec_dir, 'angular-app' }
   let(:angular_build_path) { File.join angular_app_path, 'dist/angular-app' }
 
   let(:server) do
@@ -27,7 +27,6 @@ describe CapybaraSpa::Server::NgStaticServer, js: true do
 
         visit '/'
         expect(page).to have_content('Welcome to app!')
-
         pid_file = server.pid_file
         expect(File.exist?(pid_file)).to be true
 
@@ -148,10 +147,8 @@ describe CapybaraSpa::Server::NgStaticServer, js: true do
   end
 
   context 'when the angular-app is not found/built' do
-    let(:angular_app_path) { File.join tmp_dir, '/non-existent/angular-app' }
-
     let(:server_args) do
-      default_constructor_args.merge(build_path: angular_app_path)
+      default_constructor_args.merge(build_path: File.join(angular_app_path, 'non-existent'))
     end
 
     it 'prints an error' do

@@ -11,7 +11,7 @@ module CapybaraSpa
   end
 
   self.app_tag = ENV.fetch('NG_APP_TAG', 'app-root')
-  self.log_file = ENV.fetch('NG_LOG_FILE', '/dev/null')
+  self.log_file = ENV.fetch('NG_LOG_FILE', STDOUT)
 
   module Server
   end
