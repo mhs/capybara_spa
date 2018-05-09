@@ -1,5 +1,62 @@
-sudo: false
-language: ruby
+language: node_js
+sudo: required
+node_js:
+  - '9.11.1'
 rvm:
   - 2.4.1
-before_install: gem install bundler -v 1.16.1
+
+addons:
+  apt:
+    sources:
+      - google-chrome
+    packages:
+      - google-chrome-stable
+
+cache:
+  bundler: true
+  directories:
+    - /home/travis/.rvm/
+    - spec/angular-app
+
+cache: bundler
+
+before_install:
+  - wget http://chromedriver.storage.googleapis.com/2.38/chromedriver_linux64.zip
+  - unzip chromedriver_linux64.zip
+  - rm chromedriver_linux64.zip
+  - sudo mv -f chromedriver /usr/local/bin/
+  - sudo chmod +x /usr/local/bin/chromedriver
+  - google-chrome-stable --headless --no-sandbox
+
+  - gem install bundler -v 1.16.1
+  - ruby --version
+  - rvm --version
+  - bundle --version
+  - gem --version
+
+  - pwd
+  - ls
+
+install:
+
+before_script:
+  - bundle install
+
+  - cd spec/angular-app && npm install && cd ../../
+  - export DISPLAY=:99.0
+  - sh -e /etc/init.d/xvfb start
+  - sleep 1
+
+script:
+  - HEADLESS=true bundle exec rspec spec
+
+after_success:
+
+after_failure:
+
+after_script:
+
+branches:
+
+notifications:
+  email: false

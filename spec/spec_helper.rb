@@ -1,3 +1,5 @@
+STDOUT.sync = true
+
 require 'simplecov'
 SimpleCov.start
 
@@ -14,6 +16,10 @@ require 'capybara_spa'
 
 chrome_options = {}
 logging_preferences = { browser: 'ALL' }
+
+chrome_bin = ENV.fetch('CHROME_BIN', nil)
+chrome_options = {}
+chrome_options[:binary] = chrome_bin if chrome_bin
 
 Capybara.register_driver :chrome do |app|
   capabilities = Selenium::WebDriver::Remote::Capabilities.chrome(
@@ -153,7 +159,11 @@ RSpec.configure do |config|
   config.include Capybara::DSL, js: true
 
   config.before(:suite) do
-    angular_app_path = File.join File.dirname(__FILE__), '..', 'tmp', 'angular-app'
+    spec_dir = File.expand_path File.join(File.dirname(__FILE__))
+    tmp_dir = File.expand_path File.join(spec_dir, '..', 'tmp')
+    FileUtils.mkdir_p tmp_dir
+
+    angular_app_path = File.join spec_dir, 'angular-app'
     output_path = File.join angular_app_path, 'dist'
 
     build_static_angular_app = -> {
@@ -161,7 +171,7 @@ RSpec.configure do |config|
         cd #{angular_app_path} &&
           ng build --configuration integration-test
       SHELL
-      puts result.inspect
+      puts "Built the angular app succesfully? #{result}"
     }
 
     if Dir.exist?(output_path)
