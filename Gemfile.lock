@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    capybara_spa (0.2.0)
+    capybara_spa (0.3.0)
       capybara (~> 3.0)
 
 GEM
@@ -11,6 +11,7 @@ GEM
       public_suffix (>= 2.0.2, < 4.0)
     archive-zip (0.11.0)
       io-like (~> 0.3.0)
+    bump (0.6.0)
     byebug (10.0.2)
     capybara (3.0.3)
       addressable
@@ -75,6 +76,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  bump (~> 0.6.0)
   bundler (~> 1.16)
   capybara_spa!
   chromedriver-helper (~> 1.2)
