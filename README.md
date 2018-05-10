@@ -49,7 +49,7 @@ Here's a sample of using this library on a Rails project. Just update the `rails
 require 'capybara/rails'
 require 'capybara_spa'
 
-$angular_http_server = CapybaraSpa::Server::NgStaticServer.new(
+FrontendServer = CapybaraSpa::Server::NgStaticServer.new(
   build_path: File.dirname(__FILE__) + '/../../public/app',
   http_server_bin_path: File.dirname(__FILE__) + '/../../node_modules/.bin/angular-http-server',
   log_file: File.dirname(__FILE__) + '/../../log/angular-process.log',
@@ -57,50 +57,48 @@ $angular_http_server = CapybaraSpa::Server::NgStaticServer.new(
 )
 ```
 
-Next, configure RSpec to start the server when running `:js` specs:
+Next, configure RSpec to start and stop the server:
 
 ```
 RSpec.configure do |config|
   config.before(:each) do |example|
     if self.class.metadata[:js]
       begin
-        $angular_http_server.start unless $angular_http_server.started?
+        FrontendServer.start unless FrontendServer.started?
       rescue CapybaraSpa::Server::Error => ex
         # Server raised an exception when starting. Force exit
-        # so developer see the error immediately. Otherwise, Ruby
-        # was hanging while waiting for Puma to boot up.
+        # so developer see the error immediately. Otherwise, RSpec/Capybara
+        # are hanging around waiting for Puma to boot up.
         STDERR.puts ex.message, ex.backtrace.join("\n")
         exit!
       end
     end
   end
-end
-```
 
-### No explicit stop?
-
-You may have noticed that there is no `stop` call registered above. This is because CapybaraSpa will register its own `at_exit` handler(s) to ensure that it kills any child processes that it spawns to help avoid the risk of child zombie processes.
-
-If you want to explicitly stop the server you can add the following:
-
-```
-RSpec.configure do |config|
-  config.after(:suite) do |example|
-    $angular_http_server.stop if $angular_http_server.started?
+  config.after(:suite) do
+    FrontendServer.stop if FrontendServer.started?
   end
 end
 ```
 
-### Why use a global variable?
+### Starting and Stopping
 
-The above example uses one because it makes it easy to reference from the necessary before/after hooks which exist. You do not need to use a global.
+Above, we added a `before(:each)` block to conditionally start the server. Since starting the server can be an expensive operation we only want to do it when we are running javascript specs (e.g. `:js`) and we only want to incur the cost once. So we essentially start it on the very first test that uses javascript and then we leave it running throughout of the test suite.
+
+After that, an `after(:suite)` block is added to ensure that we stop the server. Technically, this is not necessary as  `CapybaraSpa` will install `at_exit` handlers to ensure that any child processes are terminated (to ensure no zombie processes creep up).
+
+### Why use a global constant?
+
+The above example uses a global constant because it makes it accessible anywhere (e.g. say we're debugging a test and want to inspect the front-end server process) and because it essentially makes our server instance a singleton.
+
+You can use a dollar-sign global (e.g. `$frontend_server`) or even a local variable (`frontend_server`). Your call.
 
 ### Configure Capybara
 
 Here's a sample configuration of Capybara. It sets the `app_host` to be the front-end application that the browser will hit, and then it sets the back-end server to run on port 3001.
 
 ```
-Capybara.app_host = "http://localhost:#{$angular_http_server.port}"
+Capybara.app_host = "http://localhost:#{FrontendServer.port}"
 ```
 
 Next, be sure to tell Capybara to hit the backend server process on the right port, e.g.
