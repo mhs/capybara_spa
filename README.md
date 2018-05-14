@@ -45,7 +45,7 @@ You can use this with any Ruby testing library that Capybara works with.
 
 Here's a sample of using this library on a Rails project. Just update the `rails_helper.rb` after you Capybara is loaded. Then, create the server:
 
-```
+```ruby
 require 'capybara/rails'
 require 'capybara_spa'
 
@@ -61,7 +61,7 @@ FrontendServer = CapybaraSpa::Server::NgStaticServer.new(
 
 Since we're using RSpec in this README, the next thing to do is configure RSpec to start and stop the server:
 
-```
+```ruby
 RSpec.configure do |config|
   config.before(:each) do |example|
     if self.class.metadata[:js]
@@ -93,7 +93,7 @@ After that, an `after(:suite)` block is added to ensure that we stop the server.
 
 Let's say that you don't want to incur the startup cost of booting up the frontend server on every single test run. You can keep a frontend server running in a separate terminal tab and tell the test suite what port to connect to. For example, the above `CapybaraSpa::Server::NgStaticServer` could be replaced with the below lines:
 
-```
+```ruby
 FrontendServer = CapybaraSpa::Server::ExternalServer.new(
   port: 5001 # port is the port that your front-end application server is running on
 )
@@ -113,13 +113,13 @@ You can use a dollar-sign global (e.g. `$frontend_server`) or even a local varia
 
 Here's a sample configuration of Capybara. It sets the `app_host` to be the front-end application that the browser will hit, and then it sets the back-end server to run on port 3001.
 
-```
+```ruby
 Capybara.app_host = "http://localhost:#{FrontendServer.port}"
 ```
 
 Next, be sure to tell Capybara to hit the backend server process on the right port, e.g.
 
-```
+```ruby
 Capybara.server_port = 3001
 ```
 
@@ -130,7 +130,7 @@ This will require that your front-end application is also configured to connect 
 
 For Angular 5 and 6 make a new environment (e.g. `ANGULAR_APP/src/environments/environment.integration.ts`) based off from an existing environment (either dev or production) but with the necessary API url configured to look for the API server on port 3001.
 
-```
+```javascript
 export const environment = {
   production: false,
   apiUrl: 'http://localhost:3001'
@@ -139,7 +139,7 @@ export const environment = {
 
 Angular 6 requires one more change to. This time, a change to the `angular.json` configuration file. Be sure to add an integration `configuration`, e.g.:
 
-```
+```javascript
     "configurations": {
         "integration": {
             "fileReplacements": [
