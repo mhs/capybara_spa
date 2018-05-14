@@ -11,7 +11,6 @@ Bundler.require(:default, :test)
 require 'capybara/rspec'
 require 'selenium/webdriver'
 
-
 require 'capybara_spa'
 
 chrome_options = {}

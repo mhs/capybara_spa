@@ -8,17 +8,17 @@ Often, when developing an API server and a front-end client separately it can be
 
 ## How does it work?
 
-CapybaraSpa runs (and terminate) external processes for the front-end application. When the test suite boots up it will spawn a child process that server your front-end application.
+CapybaraSpa either runs (and terminates) an external processes for the front-end application, or, it will connect to an externally running process on a specified port. When the test suite boots up it will spawn a child process that server your front-end application.
 
 It also updates Capybara's `visit` method to wait for the application to boot up before running the tests.. Then, when the test suite is done it will terminate any child processes.
 
 Currently, you can:
 
 * Run an inline static Angular 2, 4, 5, or 6 application using the `CapybaraSpa::Server::NgStaticServer`
+* Connect to an external process running on a specified port using the `CapybaraSpa::Server::ExternalServer`
 
 Coming soon you'll be able to:
 
-* Connect to an existing process (e.g. run a server in a separate terminal then tell your test quite about it)
 * Run an inline external process by providing the command to start
 
 ## Installation
@@ -57,7 +57,9 @@ FrontendServer = CapybaraSpa::Server::NgStaticServer.new(
 )
 ```
 
-Next, configure RSpec to start and stop the server:
+### Configure your test library to start and stop the server
+
+Since we're using RSpec in this README, the next thing to do is configure RSpec to start and stop the server:
 
 ```
 RSpec.configure do |config|
@@ -87,11 +89,25 @@ Above, we added a `before(:each)` block to conditionally start the server. Since
 
 After that, an `after(:suite)` block is added to ensure that we stop the server. Technically, this is not necessary as  `CapybaraSpa` will install `at_exit` handlers to ensure that any child processes are terminated (to ensure no zombie processes creep up).
 
+### Connecting to an external server
+
+Let's say that you don't want to incur the startup cost of booting up the frontend server on every single test run. You can keep a frontend server running in a separate terminal tab and tell the test suite what port to connect to. For example, the above `CapybaraSpa::Server::NgStaticServer` could be replaced with the below lines:
+
+```
+FrontendServer = CapybaraSpa::Server::ExternalServer.new(
+  port: 5001 # port is the port that your front-end application server is running on
+)
+```
+
+If you use the `CapybaraSpa::Server::ExternalServer` you will want to leave the `start` and `stop` configuration for your test library in place. This is so that you are notified of a failure if the external process/server is not running, not listening on the correct port, or does not stop.
+
+By default, `CapybaraSpa::Server::ExternalServer` will wait up to 1 minute to attempt to connect to the port and it will wait up to 1 second for it to be stopped. You can change these values by passing in the `start_timeout` and `stop_timeout` options to the constructor.
+
 ### Why use a global constant?
 
 The above example uses a global constant because it makes it accessible anywhere (e.g. say we're debugging a test and want to inspect the front-end server process) and because it essentially makes our server instance a singleton.
 
-You can use a dollar-sign global (e.g. `$frontend_server`) or even a local variable (`frontend_server`). Your call.
+You can use a dollar-sign global (e.g. `$frontend_server`) or even a local variable (`frontend_server`). You can also name it whatever you like. Your call. Have fun.
 
 ### Configure Capybara
 
