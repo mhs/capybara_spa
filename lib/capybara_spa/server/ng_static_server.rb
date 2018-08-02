@@ -26,11 +26,23 @@ module CapybaraSpa
       def initialize(build_path: nil, http_server_bin_path: nil, log_file: CapybaraSpa.log_file, pid_file: nil, port: nil)
         build_path ||= ENV.fetch('NG_BUILD_PATH', nil)
         @build_path = File.expand_path(build_path) if build_path
+        @built = false
         @http_server_bin_path = http_server_bin_path || ENV.fetch('NG_HTTP_SERVER_BIN') { find_http_server_bin_path }
         @log_file = log_file
         @pid_file = pid_file || ENV.fetch('NG_PID_FILE', '/tmp/angular-process.pid')
         @port = port || ENV.fetch('NG_PORT', 5001)
         @started = false
+      end
+
+      def build(&blk)
+        @built ||= begin
+          yield
+          true
+        end
+      end
+
+      def built?
+        @built
       end
 
       def started?

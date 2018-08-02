@@ -203,4 +203,23 @@ describe CapybaraSpa::Server::NgStaticServer, js: true do
       end.to_not raise_error
     end
   end
+
+  describe '#build - building the angular app' do
+    it 'yields the given block for building the angular app once' do
+      number_of_times_built = 0
+
+      server.build { number_of_times_built += 1 }
+      expect(number_of_times_built).to eq(1)
+
+      expect do
+        server.build { number_of_times_built += 1 }
+      end.to_not change { number_of_times_built }
+    end
+
+    it 'marks the server has built' do
+      expect do
+        server.build { 123456789 }
+      end.to change { server.built? }.to be(true)
+    end
+  end
 end
