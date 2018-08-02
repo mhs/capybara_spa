@@ -112,7 +112,11 @@ module CapybaraSpa
           error_message = <<-ERROR.gsub(/^\s*\|/, '')
             |#{File.expand_path(build_path)} directory not found! Make sure the angular app is being built:
             |
-            |E.g. ng build --aot --environment integration-tests --target=development --output-path=public/app/
+            |Angular 5 example:
+            |   ng build --aot --environment e2e --target=development --output-path=public/app/
+            |
+            |Angular 6 example:
+            |   ng build --aot --configuration e2e --output-path=public/app/
             |
           ERROR
           raise NgAppNotFound, error_message
@@ -125,7 +129,6 @@ module CapybaraSpa
         # if no http-server found in default PATH then try to find it in node_modules
         if http_server_bin_path.length == 0
           http_server_bin_path = File.join(node_modules_path, '.bin', 'angular-http-server')
-        else
         end
 
         File.expand_path(http_server_bin_path) if http_server_bin_path
