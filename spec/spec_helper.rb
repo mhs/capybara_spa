@@ -157,6 +157,11 @@ RSpec.configure do |config|
 
   config.include Capybara::DSL, js: true
 
+  config.before(:each) do
+    # Reset between tests
+    CapybaraSpa.single_page_app_found = false
+  end
+
   config.before(:suite) do
     spec_dir = File.expand_path File.join(File.dirname(__FILE__))
     tmp_dir = File.expand_path File.join(spec_dir, '..', 'tmp')

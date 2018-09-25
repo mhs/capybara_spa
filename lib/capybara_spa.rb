@@ -7,6 +7,10 @@ module CapybaraSpa
     # +log_file+ where to log the output of angular-http-server. Defaults to /dev/null \
     #   This can be set thru the SPA_LOG_FILE environment variable.
     attr_accessor :log_file
+
+    # +single_page_app_found+ stores whether or not the single page app has been found. \
+    # It will be a falsy value if not found and true when found.
+    attr_accessor :single_page_app_found
   end
 
   self.app_tag = ENV.fetch('SPA_APP_TAG', 'app-root')
