@@ -163,8 +163,8 @@ module CapybaraSpa
       def run_server
         build_dir = File.dirname(build_path)
         Dir.chdir(build_dir) do
-          cmd = "#{http_server_bin_path} -p #{port} --path #{File.basename(build_path)}"
-          puts "capybara_spa/angular-http-server is executing command: #{cmd}" if ENV['DEBUG']
+          cmd = [http_server_bin_path, "-p", port, "--path", File.basename(build_path)]
+          puts "capybara_spa/angular-http-server is executing command: #{cmd.join(' ')}" if ENV['DEBUG']
           spawn_cmd(cmd)
         end
       end
@@ -175,7 +175,7 @@ module CapybaraSpa
         # use spawn(cmd, arg1, ... ) version to avoid launching a shell that launches the
         # http-server or ng process. We want this pid to be the actual process to kill when
         # this program is done exiting.
-        pid = spawn *cmd.split(/\s+/)
+        pid = spawn *cmd
 
         puts "capybara_spa/angular-http-server:forked child with pid: #{pid}" if ENV['DEBUG']
 
